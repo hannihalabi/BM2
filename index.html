@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Eclipx</title>
+    <link rel="stylesheet" href="style.css" />
+    <script defer src="script.js"></script>
+  </head>
+  <body>
+    <!-- design inspired by https://www.authkit.com/ -->
+    <div class="header">
+      <div class="mid-spot" aria-hidden="true"></div>
+
+      <div class="spotlight" aria-hidden="true">
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+    </div>
+
+    <canvas id="particleCanvas" aria-hidden="true"></canvas>
+
+    <div class="accent-lines" aria-hidden="true">
+      <div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+      <div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+    </div>
+    <div class="heroSubP">
+      <p>Introducing</p>
+    </div>
+    <div class="hero">
+      <div class="heroT">
+        <h2>Black Moose</h2>
+        <h2>Black Moose</h2>
+      </div>
+    </div>
+    <div class="heroPWrap" aria-label="Hero subtitle and action">
+      <p class="heroP">One of Swedens most talented artists</p>
+      <button class="book-cta cta-pill" type="button">Book now<span class="cta-pill-glow" aria-hidden="true"></span></button>
+    </div>
+    <div class="mountains" aria-hidden="true">
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+    <div class="hero-spacer" aria-hidden="true"></div>
+
+    <section class="logo-loop" aria-label="Highlights">
+      <div class="logo-loop-shell">
+        <div class="logo-loop-fade" aria-hidden="true"></div>
+        <div class="logo-loop-marquee" aria-hidden="false">
+          <ul class="logo-loop-list">
+            <li class="logo-pill">
+              <span class="logo-mark" aria-hidden="true"></span><span class="logo-name">Live Sets</span>
+            </li>
+            <li class="logo-pill">
+              <span class="logo-mark" aria-hidden="true"></span><span class="logo-name">Residencies</span>
+            </li>
+            <li class="logo-pill">
+              <span class="logo-mark" aria-hidden="true"></span><span class="logo-name">Festivals</span>
+            </li>
+            <li class="logo-pill">
+              <span class="logo-mark" aria-hidden="true"></span><span class="logo-name">Radio</span>
+            </li>
+            <li class="logo-pill">
+              <span class="logo-mark" aria-hidden="true"></span><span class="logo-name">Worldwide</span>
+            </li>
+            <li class="logo-pill">
+              <span class="logo-mark" aria-hidden="true"></span><span class="logo-name">Bookings</span>
+            </li>
+            <li class="logo-pill">
+              <span class="logo-mark" aria-hidden="true"></span><span class="logo-name">Studio</span>
+            </li>
+            <li class="logo-pill">
+              <span class="logo-mark" aria-hidden="true"></span><span class="logo-name">Releases</span>
+            </li>
+            <li class="logo-pill">
+              <span class="logo-mark" aria-hidden="true"></span><span class="logo-name">Collabs</span>
+            </li>
+            <li class="logo-pill">
+              <span class="logo-mark" aria-hidden="true"></span><span class="logo-name">Events</span>
+            </li>
+          </ul>
+          <ul class="logo-loop-list" aria-hidden="true">
+            <li class="logo-pill">
+              <span class="logo-mark" aria-hidden="true"></span><span class="logo-name">Live Sets</span>
+            </li>
+            <li class="logo-pill">
+              <span class="logo-mark" aria-hidden="true"></span><span class="logo-name">Residencies</span>
+            </li>
+            <li class="logo-pill">
+              <span class="logo-mark" aria-hidden="true"></span><span class="logo-name">Festivals</span>
+            </li>
+            <li class="logo-pill">
+              <span class="logo-mark" aria-hidden="true"></span><span class="logo-name">Radio</span>
+            </li>
+            <li class="logo-pill">
+              <span class="logo-mark" aria-hidden="true"></span><span class="logo-name">Worldwide</span>
+            </li>
+            <li class="logo-pill">
+              <span class="logo-mark" aria-hidden="true"></span><span class="logo-name">Bookings</span>
+            </li>
+            <li class="logo-pill">
+              <span class="logo-mark" aria-hidden="true"></span><span class="logo-name">Studio</span>
+            </li>
+            <li class="logo-pill">
+              <span class="logo-mark" aria-hidden="true"></span><span class="logo-name">Releases</span>
+            </li>
+            <li class="logo-pill">
+              <span class="logo-mark" aria-hidden="true"></span><span class="logo-name">Collabs</span>
+            </li>
+            <li class="logo-pill">
+              <span class="logo-mark" aria-hidden="true"></span><span class="logo-name">Events</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="gallery-section" id="gallery" aria-label="Gallery">
+      <div class="gallery-head">
+        <p class="subt">Gallery</p>
+        <h3 class="title">Latest shots</h3>
+        <p class="subp">Tap an image to view it larger.</p>
+      </div>
+      <div class="gallery-grid" id="galleryGrid"></div>
+      <div class="gallery-actions">
+        <button class="gallery-more cta-pill" id="galleryMore" type="button">Show more pictures<span class="cta-pill-glow" aria-hidden="true"></span></button>
+      </div>
+    </section>
+
+    <section class="bio-section" id="bio" aria-label="About Black Moose">
+      <div class="bio-shell">
+        <div class="bio-card">
+          <div class="bio-photo">
+            <img
+              src="pics%20copy/WhatsApp%20Image%202025-12-12%20at%2017.42.27%20(3).jpeg"
+              alt="Black Moose portrait"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+          <div class="bio-copy">
+            <p class="bio-kicker">About</p>
+            <h3 class="bio-title">Black Moose</h3>
+            <p class="bio-text">
+              Swedish DJ and artist with a sound built for packed rooms—melodic,
+              energetic, and always moving. From intimate club nights to bigger
+              stages, Black Moose brings tight transitions, bold selections, and
+              a crowd-first mindset.
+            </p>
+            <div class="bio-actions">
+              <button class="cta-pill bio-cta" type="button">Book now<span class="cta-pill-glow" aria-hidden="true"></span></button>
+              <a class="bio-link" href="#gallery">See the gallery</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="content-section" id="contact">
+      <div class="content-acc" aria-hidden="true">
+        <div></div>
+        <div></div>
+      </div>
+      <p class="subt">Sound, curated</p>
+      <h3 class="title">
+        Club Energy.<br />
+        Festival Ready.
+      </h3>
+      <p class="subp">
+        From deep grooves to peak‑time drops, <br />Black Moose delivers
+        high‑impact sets built for the room.
+      </p>
+    </div>
+
+    <dialog class="lightbox" id="lightbox" aria-label="Image viewer">
+      <button class="lightbox-close" type="button" data-lightbox-close aria-label="Close">×</button>
+      <button class="lightbox-nav lightbox-prev" type="button" data-lightbox-prev aria-label="Previous">‹</button>
+      <button class="lightbox-nav lightbox-next" type="button" data-lightbox-next aria-label="Next">›</button>
+      <img id="lightboxImg" alt="" />
+    </dialog>
+  </body>
+</html>
