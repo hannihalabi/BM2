@@ -534,6 +534,9 @@ p {
   translate: 0 1em;
   animation: load 2s ease-out 2s forwards, up 1.4s ease-out 2s forwards;
 }
+.heroPWrap {
+  top: clamp(22em, calc(20.6em + 4vw), 32em);
+}
 .heroP {
   font-size: 1.2em;
   color: #d8ecf8;
@@ -584,6 +587,9 @@ p {
 @media (max-width: 520px) {
   .heroSubP p {
     font-size: 1.6em;
+  }
+  .heroPWrap {
+    top: calc(20.6em + 20px);
   }
 }
 .heroSubP p::before,
@@ -1007,6 +1013,89 @@ p {
   }
 }
 
+.video-section {
+  position: relative;
+  z-index: 55;
+  width: 100%;
+  padding: 1.6em 0 2.4em 0;
+}
+.video-shell {
+  width: min(1100px, 92vw);
+  margin: 0 auto;
+}
+.video-card {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 1em;
+  align-items: center;
+  padding: 1.2em;
+  border-radius: 1.8em;
+  border: 1px solid rgba(194, 204, 255, 0.14);
+  background:
+    radial-gradient(900px 200px at 50% 0%, rgba(152, 192, 239, 0.16), transparent 55%),
+    linear-gradient(180deg, rgba(18, 21, 33, 0.55), rgba(18, 21, 33, 0.18));
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+.video-frame {
+  position: relative;
+  border-radius: 1.4em;
+  overflow: hidden;
+  border: 1px solid rgba(194, 204, 255, 0.18);
+  background: rgba(18, 21, 33, 0.45);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+.video-frame video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: 460px;
+  object-fit: cover;
+  background: #0e111d;
+}
+.video-caption {
+  padding: 0.4em 0.6em;
+  text-align: left;
+}
+.video-kicker {
+  font-size: 0.85em;
+  font-weight: 300;
+  color: rgba(216, 236, 248, 0.72);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0 0 0.35em 0;
+}
+.video-title {
+  margin: 0 0 0.4em 0;
+  font-size: 1.8em;
+  font-weight: 650;
+  background: linear-gradient(0deg, #f1e9ff 0, #9dc3f7 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 14px rgba(152, 192, 239, 0.18);
+}
+.video-text {
+  color: rgba(241, 233, 255, 0.88);
+  font-size: 1em;
+  line-height: 1.5;
+  max-width: 34ch;
+  margin: 0;
+}
+@media (max-width: 900px) {
+  .video-card {
+    grid-template-columns: 1fr;
+  }
+  .video-caption {
+    text-align: center;
+  }
+  .video-text {
+    margin: 0 auto;
+  }
+}
+
 .gallery-section {
   position: relative;
   z-index: 50;
@@ -1092,6 +1181,7 @@ p {
   padding: 0.8em 1.2em 2.2em 1.2em;
   display: grid;
   grid-template-columns: repeat(12, 1fr);
+  grid-auto-flow: dense;
   gap: 0.9em;
 }
 
@@ -1110,7 +1200,7 @@ p {
 }
 
 .gallery-item {
-  grid-column: span 4;
+  grid-column: span 3;
   position: relative;
   border: 1px solid rgba(194, 204, 255, 0.14);
   background: rgba(18, 21, 33, 0.55);
