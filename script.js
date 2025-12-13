@@ -99,15 +99,23 @@ const setupGallery = () => {
 
   const batchSize = 12;
   let renderedCount = 0;
+  let useSpecialLayout = false;
+
+  const getBatchSize = () => {
+    if (window.matchMedia?.('(max-width: 520px)').matches) return 9; // 3 columns * 3 rows
+    if (window.matchMedia?.('(max-width: 920px)').matches) return 6; // 2 columns * 3 rows
+    return 12; // 4 items/row (12-col grid with span-3 items) * 3 rows
+  };
 
   const layoutClassForIndex = (index) => {
+    if (!useSpecialLayout) return '';
     if (index % 11 === 3) return 'gallery-item--wide';
     if (index % 9 === 5) return 'gallery-item--tall';
     return '';
   };
 
   const renderNextBatch = () => {
-    const nextCount = Math.min(GALLERY_FILES.length, renderedCount + batchSize);
+    const nextCount = Math.min(GALLERY_FILES.length, renderedCount + getBatchSize());
     for (let i = renderedCount; i < nextCount; i++) {
       const button = document.createElement('button');
       button.type = 'button';
@@ -132,7 +140,10 @@ const setupGallery = () => {
     }
   };
 
-  showMoreBtn?.addEventListener('click', renderNextBatch);
+  showMoreBtn?.addEventListener('click', () => {
+    useSpecialLayout = true;
+    renderNextBatch();
+  });
   renderNextBatch();
 };
 
@@ -274,5 +285,47 @@ const setupMobileViewportVideoAutoplay = () => {
   updateSoundButton();
 };
 
+const setupBookingDialog = () => {
+  const dialog = document.getElementById('bookingDialog');
+  if (!(dialog instanceof HTMLDialogElement)) return;
+
+  const closeBtn = dialog.querySelector('[data-booking-close]');
+  const form = document.getElementById('bookingForm');
+  const nameInput = document.getElementById('bookingName');
+  const emailInput = document.getElementById('bookingEmail');
+  const status = document.getElementById('bookingStatus');
+
+  const open = () => {
+    if (status) status.textContent = '';
+    if (form instanceof HTMLFormElement) form.reset();
+    dialog.showModal();
+    if (nameInput instanceof HTMLElement) nameInput.focus();
+  };
+
+  const close = () => dialog.close();
+
+  document.querySelectorAll('.book-cta, .bio-cta').forEach((button) => {
+    button.addEventListener('click', (event) => {
+      event.preventDefault();
+      open();
+    });
+  });
+
+  closeBtn?.addEventListener('click', close);
+
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog) close();
+  });
+
+  if (form instanceof HTMLFormElement) {
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (typeof form.reportValidity === 'function' && !form.reportValidity()) return;
+      if (status) status.textContent = 'Thanks! I’ll get back to you shortly.';
+    });
+  }
+};
+
 setupGallery();
 setupMobileViewportVideoAutoplay();
+setupBookingDialog();
