@@ -125,7 +125,7 @@ const setupGallery = () => {
 
       const img = document.createElement('img');
       img.src = toGallerySrc(GALLERY_FILES[i]);
-      img.alt = '';
+      img.alt = `Black Moose live photo ${i + 1}`;
       img.loading = 'lazy';
       img.decoding = 'async';
 
