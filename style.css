@@ -2105,3 +2105,26 @@ p {
     inset 0.2em 0.3em 0.2em -0.2em #c2ccff,
     inset 10.8em 11.3em 2em -10.5em #d4e6ff2f;
 }
+
+.site-footer {
+  position: relative;
+  z-index: 30;
+  width: 100%;
+  padding: 2em 1.2em 2.4em 1.2em;
+  text-align: center;
+  color: rgba(216, 236, 248, 0.82);
+}
+.site-footer p {
+  margin: 0;
+  font-size: 0.95em;
+  letter-spacing: 0.01em;
+}
+.site-footer a {
+  color: rgba(241, 233, 255, 0.95);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(152, 192, 239, 0.45);
+  padding-bottom: 2px;
+}
+.site-footer a:hover {
+  border-color: rgba(152, 192, 239, 0.8);
+}
