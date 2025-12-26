@@ -381,16 +381,10 @@ const setupBookingDialog = () => {
   if (!(dialog instanceof HTMLDialogElement)) return;
 
   const closeBtn = dialog.querySelector('[data-booking-close]');
-  const form = document.getElementById('bookingForm');
-  const nameInput = document.getElementById('bookingName');
-  const emailInput = document.getElementById('bookingEmail');
-  const status = document.getElementById('bookingStatus');
 
   const open = () => {
-    if (status) status.textContent = '';
-    if (form instanceof HTMLFormElement) form.reset();
     dialog.showModal();
-    if (nameInput instanceof HTMLElement) nameInput.focus();
+    closeBtn?.focus?.();
   };
 
   const close = () => dialog.close();
@@ -407,14 +401,6 @@ const setupBookingDialog = () => {
   dialog.addEventListener('click', (event) => {
     if (event.target === dialog) close();
   });
-
-  if (form instanceof HTMLFormElement) {
-    form.addEventListener('submit', (event) => {
-      event.preventDefault();
-      if (typeof form.reportValidity === 'function' && !form.reportValidity()) return;
-      if (status) status.textContent = 'Thanks! I’ll get back to you shortly.';
-    });
-  }
 };
 
 setupGallery();

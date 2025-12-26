@@ -1798,12 +1798,15 @@ p {
 }
 
 .booking-dialog {
+  position: fixed;
+  inset: 0;
   border: none;
   padding: 0;
   background: rgba(5, 6, 15, 0.88);
-  width: min(560px, 92vw);
+  width: min(680px, 94vw);
   max-height: calc(100vh - 32px);
   max-width: none;
+  margin: auto;
   border-radius: 1.4em;
   overflow: hidden;
   box-shadow: 0 50px 160px rgba(0, 0, 0, 0.65);
@@ -1828,7 +1831,7 @@ p {
   cursor: pointer;
 }
 .booking-head {
-  padding: 1.6em 1.6em 0.8em 1.6em;
+  padding: 2em 2em 1em 2em;
   text-align: center;
 }
 .booking-kicker {
@@ -1841,13 +1844,58 @@ p {
 }
 .booking-title {
   margin: 0;
-  font-size: 1.8em;
+  font-size: 2.2em;
   font-weight: 650;
   background: linear-gradient(0deg, #f1e9ff 0, #9dc3f7 100%);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow: 0 2px 14px rgba(152, 192, 239, 0.18);
+}
+.booking-info {
+  padding: 1em 2em 2.2em 2em;
+  display: grid;
+  gap: 0.9em;
+  text-align: center;
+  color: rgba(216, 236, 248, 0.86);
+}
+.booking-card {
+  font-size: 1.1em;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1em;
+  padding: 1.1em 1.3em;
+  border-radius: 1em;
+  border: 1px solid rgba(194, 204, 255, 0.16);
+  background: rgba(18, 21, 33, 0.55);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
+}
+.booking-text {
+  display: grid;
+  gap: 0.35em;
+  text-align: left;
+}
+.booking-label {
+  font-size: 0.9em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(216, 236, 248, 0.7);
+}
+.booking-email {
+  color: rgba(241, 233, 255, 0.95);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(152, 192, 239, 0.45);
+  padding-bottom: 2px;
+  justify-self: start;
+  font-size: 1.3em;
+  line-height: 1.35;
+}
+.booking-email:hover {
+  border-color: rgba(152, 192, 239, 0.8);
+}
+.booking-cta {
+  justify-self: end;
 }
 .booking-form {
   padding: 0.8em 1.6em 1.6em 1.6em;
@@ -1901,9 +1949,23 @@ p {
 
 @media (max-width: 720px) {
   .booking-dialog {
-    width: calc(100vw - 24px);
+    width: calc(100vw - 16px);
     max-height: calc(100vh - 24px);
-    margin: 12px;
+    margin: auto;
+  }
+  .booking-head {
+    padding: 1.8em 1.3em 0.8em 1.3em;
+  }
+  .booking-info {
+    padding: 0.8em 1.3em 1.6em 1.3em;
+    text-align: left;
+  }
+  .booking-card {
+    padding: 1em 1.1em;
+    gap: 0.8em;
+  }
+  .booking-email {
+    font-size: 1.45em;
   }
 }
 

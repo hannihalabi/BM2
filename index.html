@@ -448,26 +448,32 @@
       <img id="lightboxImg" alt="" />
     </dialog>
 
-    <dialog class="booking-dialog" id="bookingDialog" aria-label="Booking form">
+    <dialog class="booking-dialog" id="bookingDialog" aria-label="Booking contact">
       <button class="booking-close" type="button" data-booking-close aria-label="Close">×</button>
       <div class="booking-head">
         <p class="booking-kicker">Booking</p>
-        <h3 class="booking-title">Contact me</h3>
+        <h3 class="booking-title">Contact</h3>
       </div>
-      <form class="booking-form" id="bookingForm" novalidate>
-        <label class="booking-field">
-          <span>Name</span>
-          <input id="bookingName" name="name" type="text" autocomplete="name" required />
-        </label>
-        <label class="booking-field">
-          <span>E-mail</span>
-          <input id="bookingEmail" name="email" type="email" autocomplete="email" required />
-        </label>
-        <button class="cta-pill booking-submit" type="submit">
-          Contact me<span class="cta-pill-glow" aria-hidden="true"></span>
-        </button>
-        <p class="booking-status" id="bookingStatus" role="status" aria-live="polite"></p>
-      </form>
+      <div class="booking-info">
+        <div class="booking-card">
+          <div class="booking-text">
+            <span class="booking-label">For bookings contact:</span>
+            <a class="booking-email" href="mailto:daniel@luger.se">daniel@luger.se</a>
+          </div>
+          <a class="cta-pill booking-cta" href="mailto:daniel@luger.se"
+            >Send now<span class="cta-pill-glow" aria-hidden="true"></span
+          ></a>
+        </div>
+        <div class="booking-card">
+          <div class="booking-text">
+            <span class="booking-label">Management:</span>
+            <a class="booking-email" href="mailto:info@blackbears.se">info@blackbears.se</a>
+          </div>
+          <a class="cta-pill booking-cta" href="mailto:info@blackbears.se"
+            >Send now<span class="cta-pill-glow" aria-hidden="true"></span
+          ></a>
+        </div>
+      </div>
     </dialog>
 
     <footer class="site-footer" aria-label="Site footer">
