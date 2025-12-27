@@ -28,6 +28,16 @@
     />
     <meta name="twitter:image" content="https://www.blackmoose.se/hero.jpeg" />
     <meta name="theme-color" content="#05060f" />
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-B57PK377RV"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        window.dataLayer.push(arguments);
+      }
+      gtag('js', new Date());
+      gtag('config', 'G-B57PK377RV');
+    </script>
     <link rel="stylesheet" href="style.css" />
     <script defer src="script.js"></script>
     <script type="application/ld+json">
@@ -458,18 +468,18 @@
         <div class="booking-card">
           <div class="booking-text">
             <span class="booking-label">For bookings contact:</span>
-            <a class="booking-email" href="mailto:daniel@luger.se">daniel@luger.se</a>
+            <a class="booking-email" data-contact="booking" href="mailto:daniel@luger.se">daniel@luger.se</a>
           </div>
-          <a class="cta-pill booking-cta" href="mailto:daniel@luger.se"
+          <a class="cta-pill booking-cta" data-contact="booking" href="mailto:daniel@luger.se"
             >Send now<span class="cta-pill-glow" aria-hidden="true"></span
           ></a>
         </div>
         <div class="booking-card">
           <div class="booking-text">
             <span class="booking-label">Management:</span>
-            <a class="booking-email" href="mailto:info@blackbears.se">info@blackbears.se</a>
+            <a class="booking-email" data-contact="management" href="mailto:info@blackbears.se">info@blackbears.se</a>
           </div>
-          <a class="cta-pill booking-cta" href="mailto:info@blackbears.se"
+          <a class="cta-pill booking-cta" data-contact="management" href="mailto:info@blackbears.se"
             >Send now<span class="cta-pill-glow" aria-hidden="true"></span
           ></a>
         </div>

@@ -98,6 +98,11 @@ const GALLERY_FILES = [...GALLERY_FILES_RAW].sort((a, b) => {
   return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
 });
 
+const trackEvent = (name, params = {}) => {
+  if (typeof window.gtag !== 'function') return;
+  window.gtag('event', name, params);
+};
+
 const toGallerySrc = (filename) => encodeURI(`Bm-pics/${filename}`);
 
 const setupGallery = () => {
@@ -382,7 +387,8 @@ const setupBookingDialog = () => {
 
   const closeBtn = dialog.querySelector('[data-booking-close]');
 
-  const open = () => {
+  const open = (source) => {
+    trackEvent('booking_dialog_open', { source: source || 'unknown' });
     dialog.showModal();
     closeBtn?.focus?.();
   };
@@ -392,7 +398,16 @@ const setupBookingDialog = () => {
   document.querySelectorAll('.book-cta, .bio-cta').forEach((button) => {
     button.addEventListener('click', (event) => {
       event.preventDefault();
-      open();
+      const source = button.classList.contains('book-cta') ? 'hero' : 'bio';
+      trackEvent('book_now_click', { source });
+      open(source);
+    });
+  });
+
+  document.querySelectorAll('.booking-email, .booking-cta').forEach((link) => {
+    link.addEventListener('click', () => {
+      const contact = link.getAttribute('data-contact') || 'unknown';
+      trackEvent('booking_email_click', { contact });
     });
   });
 
