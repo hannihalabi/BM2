@@ -98,12 +98,113 @@ const GALLERY_FILES = [...GALLERY_FILES_RAW].sort((a, b) => {
   return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
 });
 
+const SHEET_CONFIG = {
+  sheetId: '1z0sGYdKz6QzpyX904lH4hu7WMBse1_HF8je_qfVetHE',
+  gid: '0',
+  maxRows: 12,
+};
+
+const EVENTS_INITIAL_COUNT = 3;
+
+const EVENT_HEADER_KEYS = {
+  date: ['date', 'datum'],
+  time: ['time', 'tid'],
+  venue: ['venue', 'scene', 'stage', 'plats'],
+  city: ['city', 'stad', 'ort', 'location', 'place'],
+  title: ['title', 'event', 'gig', 'name', 'event name', 'name of event'],
+  link: ['link', 'url', 'tickets', 'ticket'],
+  linkText: ['link text', 'linktext', 'cta', 'button'],
+  note: ['note', 'info', 'details', 'extra'],
+};
+
 const trackEvent = (name, params = {}) => {
   if (typeof window.gtag !== 'function') return;
   window.gtag('event', name, params);
 };
 
 const toGallerySrc = (filename) => encodeURI(`Bm-pics/${filename}`);
+
+const parseCsv = (text) => {
+  const rows = [];
+  let row = [];
+  let cell = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i += 1) {
+    const char = text[i];
+
+    if (inQuotes) {
+      if (char === '"') {
+        const nextChar = text[i + 1];
+        if (nextChar === '"') {
+          cell += '"';
+          i += 1;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        cell += char;
+      }
+      continue;
+    }
+
+    if (char === '"') {
+      inQuotes = true;
+      continue;
+    }
+
+    if (char === ',') {
+      row.push(cell);
+      cell = '';
+      continue;
+    }
+
+    if (char === '\n') {
+      row.push(cell);
+      rows.push(row);
+      row = [];
+      cell = '';
+      continue;
+    }
+
+    if (char === '\r') {
+      continue;
+    }
+
+    cell += char;
+  }
+
+  if (cell.length || row.length) {
+    row.push(cell);
+    rows.push(row);
+  }
+
+  return rows;
+};
+
+const toLocalISODate = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const extractIsoDate = (value) => {
+  if (!value) return '';
+  const match = /(\d{4})[./-](\d{2})[./-](\d{2})/.exec(value);
+  if (!match) return '';
+  const [, year, month, day] = match;
+  return `${year}-${month}-${day}`;
+};
+
+const findHeaderIndex = (headers, candidates) => {
+  const normalized = headers.map((header) => header.trim().toLowerCase());
+  for (const candidate of candidates) {
+    const index = normalized.indexOf(candidate);
+    if (index !== -1) return index;
+  }
+  return -1;
+};
 
 const setupGallery = () => {
   const grid = document.getElementById('galleryGrid');
@@ -197,6 +298,183 @@ const setupGallery = () => {
     renderNextBatch();
   });
   renderNextBatch();
+};
+
+const setupEventsFromSheet = () => {
+  const list = document.getElementById('eventsList');
+  const empty = document.getElementById('eventsEmpty');
+  const showMoreBtn = document.getElementById('eventsMore');
+  if (!(list instanceof HTMLElement) || !(empty instanceof HTMLElement)) return;
+
+  const { sheetId, gid, maxRows } = SHEET_CONFIG;
+
+  if (!sheetId) {
+    empty.textContent = 'Add your Google Sheet ID in script.js to show dates here.';
+    if (showMoreBtn instanceof HTMLElement) showMoreBtn.style.display = 'none';
+    return;
+  }
+
+  const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${encodeURIComponent(
+    gid,
+  )}`;
+
+  empty.textContent = 'Loading dates...';
+
+  fetch(sheetUrl, { cache: 'no-store' })
+    .then((response) => {
+      if (!response.ok) throw new Error('Failed to load sheet');
+      return response.text();
+    })
+    .then((text) => {
+      const rows = parseCsv(text);
+      if (!rows.length) {
+        empty.textContent = 'No dates yet.';
+        return;
+      }
+
+      const headers = rows[0].map((header) => header.trim());
+      const dataRows = rows.slice(1).filter((row) => row.some((cell) => cell.trim() !== ''));
+
+      if (!dataRows.length) {
+        empty.textContent = 'No dates yet.';
+        if (showMoreBtn instanceof HTMLElement) showMoreBtn.style.display = 'none';
+        return;
+      }
+
+      const indexes = {
+        date: findHeaderIndex(headers, EVENT_HEADER_KEYS.date),
+        time: findHeaderIndex(headers, EVENT_HEADER_KEYS.time),
+        venue: findHeaderIndex(headers, EVENT_HEADER_KEYS.venue),
+        city: findHeaderIndex(headers, EVENT_HEADER_KEYS.city),
+        title: findHeaderIndex(headers, EVENT_HEADER_KEYS.title),
+        link: findHeaderIndex(headers, EVENT_HEADER_KEYS.link),
+        linkText: findHeaderIndex(headers, EVENT_HEADER_KEYS.linkText),
+        note: findHeaderIndex(headers, EVENT_HEADER_KEYS.note),
+      };
+
+      const getValue = (row, index) => {
+        if (index < 0) return '';
+        const value = row[index];
+        return value ? value.trim() : '';
+      };
+
+      const events = [];
+      const limit = Math.min(dataRows.length, maxRows || dataRows.length);
+
+      for (let i = 0; i < limit; i += 1) {
+        const row = dataRows[i];
+        const event = {
+          date: getValue(row, indexes.date),
+          time: getValue(row, indexes.time),
+          venue: getValue(row, indexes.venue),
+          city: getValue(row, indexes.city),
+          title: getValue(row, indexes.title),
+          link: getValue(row, indexes.link),
+          linkText: getValue(row, indexes.linkText),
+          note: getValue(row, indexes.note),
+        };
+
+        if (!Object.values(event).some((value) => value)) continue;
+        events.push(event);
+      }
+
+      if (!events.length) {
+        empty.textContent = 'No events found. Check your column headers.';
+        if (showMoreBtn instanceof HTMLElement) showMoreBtn.style.display = 'none';
+        return;
+      }
+
+      const makeCard = (event) => {
+        const card = document.createElement('article');
+        card.className = 'event-card';
+
+        const dateText = [event.date, event.time].filter(Boolean).join(' · ') || 'Date TBA';
+        const dateEl = document.createElement('p');
+        dateEl.className = 'event-date';
+        dateEl.textContent = dateText;
+        const isoDate = extractIsoDate(event.date);
+        if (isoDate && isoDate === toLocalISODate(new Date())) {
+          card.classList.add('event-card--today');
+          dateEl.classList.add('event-date--today');
+        }
+        const details = document.createElement('div');
+        details.className = 'event-details';
+        details.appendChild(dateEl);
+
+        const titleText = event.title || event.venue || event.city || 'Live date';
+        const locationBits = [];
+        if (event.title) {
+          if (event.venue) locationBits.push(event.venue);
+          if (event.city) locationBits.push(event.city);
+        } else if (event.venue && event.city) {
+          locationBits.push(event.city);
+        }
+        const locationText = locationBits
+          .filter(Boolean)
+          .filter((value, index, arr) => arr.indexOf(value) === index)
+          .join(' · ');
+        const infoLine = locationText ? `${titleText}, ${locationText}` : titleText;
+
+        const titleEl = document.createElement('h4');
+        titleEl.className = 'event-title';
+        titleEl.textContent = infoLine;
+        details.appendChild(titleEl);
+
+        if (event.note) {
+          const noteEl = document.createElement('p');
+          noteEl.className = 'event-note';
+          noteEl.textContent = event.note;
+          details.appendChild(noteEl);
+        }
+
+        card.appendChild(details);
+
+        if (event.link) {
+          const link = document.createElement('a');
+          link.className = 'cta-pill event-link';
+          link.href = event.link;
+          link.target = '_blank';
+          link.rel = 'noopener';
+          link.textContent = event.linkText || 'Tickets';
+          card.appendChild(link);
+        } else {
+          card.classList.add('event-card--nolink');
+        }
+
+        return card;
+      };
+
+      const cards = events.map(makeCard);
+      const fragment = document.createDocumentFragment();
+      const initialCount = Math.min(EVENTS_INITIAL_COUNT, cards.length);
+      cards.slice(0, initialCount).forEach((card) => fragment.appendChild(card));
+
+      list.innerHTML = '';
+      empty.remove();
+      list.appendChild(fragment);
+
+      if (showMoreBtn instanceof HTMLElement) {
+        if (cards.length > initialCount) {
+          showMoreBtn.style.display = 'inline-flex';
+          showMoreBtn.addEventListener(
+            'click',
+            () => {
+              const rest = document.createDocumentFragment();
+              cards.slice(initialCount).forEach((card) => rest.appendChild(card));
+              list.appendChild(rest);
+              showMoreBtn.style.display = 'none';
+            },
+            { once: true },
+          );
+        } else {
+          showMoreBtn.style.display = 'none';
+        }
+      }
+    })
+    .catch(() => {
+      empty.textContent = 'Unable to load dates right now.';
+      if (showMoreBtn instanceof HTMLElement) showMoreBtn.style.display = 'none';
+    });
 };
 
 const setupMobileEmbedReveal = () => {
@@ -419,6 +697,7 @@ const setupBookingDialog = () => {
 };
 
 setupGallery();
+setupEventsFromSheet();
 setupMobileEmbedReveal();
 setupMobileViewportVideoAutoplay();
 setupBookingDialog();
