@@ -197,6 +197,11 @@ const extractIsoDate = (value) => {
   return `${year}-${month}-${day}`;
 };
 
+const isPastIsoDate = (isoDate, todayIso) => {
+  if (!isoDate || !todayIso) return false;
+  return isoDate < todayIso;
+};
+
 const findHeaderIndex = (headers, candidates) => {
   const normalized = headers.map((header) => header.trim().toLowerCase());
   for (const candidate of candidates) {
@@ -360,6 +365,7 @@ const setupEventsFromSheet = () => {
 
       const events = [];
       const limit = Math.min(dataRows.length, maxRows || dataRows.length);
+      const todayIso = toLocalISODate(new Date());
 
       for (let i = 0; i < limit; i += 1) {
         const row = dataRows[i];
@@ -375,6 +381,8 @@ const setupEventsFromSheet = () => {
         };
 
         if (!Object.values(event).some((value) => value)) continue;
+        const eventIsoDate = extractIsoDate(event.date);
+        if (eventIsoDate && isPastIsoDate(eventIsoDate, todayIso)) continue;
         events.push(event);
       }
 
