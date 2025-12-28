@@ -62,11 +62,19 @@ body::before {
   right: 0;
   top: 0;
   height: 46em;
-  background: url("hero.jpeg") center / cover no-repeat;
+  background-image: url("hero-768.jpg");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
   opacity: 0.22;
   filter: saturate(1.1) contrast(1.05);
   z-index: -3;
   pointer-events: none;
+}
+@media (min-width: 900px) {
+  body::before {
+    background-image: url("hero.jpeg");
+  }
 }
 
 .cta-pill {
@@ -143,6 +151,24 @@ body::before {
 
 .book-cta {
   display: none;
+}
+
+body:not(.effects-ready) .spotlight > div,
+body:not(.effects-ready) .heroT > h2,
+body:not(.effects-ready) .logo-loop-marquee,
+body:not(.effects-ready) .cta-pill::after,
+body:not(.effects-ready) .cta-pill .cta-pill-glow,
+body:not(.effects-ready) .event-date--today,
+body:not(.effects-ready) .event-date--next {
+  animation-play-state: paused;
+}
+body:not(.effects-ready) canvas#particleCanvas {
+  opacity: 0;
+}
+body.effects-paused .spotlight > div,
+body.effects-paused .heroT > h2,
+body.effects-paused canvas#particleCanvas {
+  animation-play-state: paused;
 }
 
 body.gold .header h2,
@@ -1414,6 +1440,41 @@ p {
   max-width: 34em;
   margin: 0 auto;
 }
+.events-rotator {
+  margin: 1.6em auto 0 auto;
+  width: min(680px, 100%);
+  max-width: 100%;
+  display: grid;
+  gap: 0.8em;
+  box-sizing: border-box;
+}
+.events-rotator-frame {
+  border-radius: 1.4em;
+  border: 1px solid rgba(194, 204, 255, 0.18);
+  background: rgba(18, 21, 33, 0.55);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+}
+.events-rotator-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 600ms ease;
+}
+.events-rotator-img.is-visible {
+  opacity: 1;
+}
+.events-rotator-empty {
+  border-radius: 1.2em;
+  border: 1px dashed rgba(194, 204, 255, 0.25);
+  background: rgba(18, 21, 33, 0.4);
+  color: #d8ecf8be;
+  text-align: center;
+  padding: 1.1em;
+}
 .events-list {
   position: relative;
   width: min(1100px, 92vw);
@@ -1549,6 +1610,12 @@ p {
   }
   .events-list {
     padding: 0.6em 1em 1.6em 1em;
+  }
+  .events-rotator {
+    margin-top: 1.2em;
+  }
+  .events-rotator-frame {
+    aspect-ratio: 1 / 1;
   }
   .events-actions {
     padding: 0 1em 1.4em 1em;

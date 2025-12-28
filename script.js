@@ -117,6 +117,16 @@ const EVENT_HEADER_KEYS = {
   note: ['note', 'info', 'details', 'extra'],
 };
 
+const IMAGE_SHEET_CONFIG = {
+  sheetName: 'Bilder',
+  intervalMs: 4200,
+};
+
+const IMAGE_HEADER_KEYS = {
+  link: ['link', 'links', 'url', 'image', 'img', 'photo', 'bild', 'lank', 'lankar', 'lank till bild', 'bildlank'],
+  date: ['date', 'datum', 'datum for event', 'event date'],
+};
+
 const trackEvent = (name, params = {}) => {
   if (typeof window.gtag !== 'function') return;
   window.gtag('event', name, params);
@@ -191,11 +201,34 @@ const toLocalISODate = (date) => {
 
 const extractIsoDate = (value) => {
   if (!value) return '';
-  const match = /(\d{4})[./-](\d{2})[./-](\d{2})/.exec(value);
-  if (!match) return '';
-  const [, year, month, day] = match;
-  return `${year}-${month}-${day}`;
+  const trimmed = value.trim();
+  const ymdMatch = /(\d{4})[./-](\d{2})[./-](\d{2})/.exec(trimmed);
+  if (ymdMatch) {
+    const [, year, month, day] = ymdMatch;
+    return `${year}-${month}-${day}`;
+  }
+  const dmyMatch = /(\d{2})[./-](\d{2})[./-](\d{4})/.exec(trimmed);
+  if (dmyMatch) {
+    const [, day, month, year] = dmyMatch;
+    return `${year}-${month}-${day}`;
+  }
+  return '';
 };
+
+const toIsoDate = (value) => {
+  const iso = extractIsoDate(value);
+  if (iso) return iso;
+  const parsed = Date.parse(value);
+  if (!Number.isNaN(parsed)) return toLocalISODate(new Date(parsed));
+  return '';
+};
+
+const normalizeHeader = (value) =>
+  value
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
 
 const isPastIsoDate = (isoDate, todayIso) => {
   if (!isoDate || !todayIso) return false;
@@ -209,10 +242,25 @@ const getEarliestIsoDate = (dates) =>
     return date < earliest ? date : earliest;
   }, '');
 
+const normalizeImageLink = (link) => {
+  if (!link) return '';
+  const trimmed = link.trim();
+  if (!trimmed) return '';
+
+  if (trimmed.includes('drive.google.com')) {
+    const fileMatch = /\/file\/d\/([^/]+)/.exec(trimmed);
+    const idMatch = /[?&]id=([^&]+)/.exec(trimmed);
+    const id = fileMatch?.[1] || idMatch?.[1];
+    if (id) return `https://lh3.googleusercontent.com/d/${id}=w1600`;
+  }
+
+  return trimmed;
+};
+
 const findHeaderIndex = (headers, candidates) => {
-  const normalized = headers.map((header) => header.trim().toLowerCase());
+  const normalized = headers.map((header) => normalizeHeader(header));
   for (const candidate of candidates) {
-    const index = normalized.indexOf(candidate);
+    const index = normalized.indexOf(normalizeHeader(candidate));
     if (index !== -1) return index;
   }
   return -1;
@@ -231,6 +279,34 @@ const setupGallery = () => {
   const nextBtn = dialog?.querySelector('[data-lightbox-next]');
 
   let currentIndex = 0;
+  const supportsObserver = 'IntersectionObserver' in window;
+  const galleryObserver = supportsObserver
+    ? new IntersectionObserver(
+        (entries, observer) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            const img = entry.target;
+            if (!(img instanceof HTMLImageElement)) return;
+            const dataSrc = img.dataset.src;
+            if (dataSrc) {
+              img.src = dataSrc;
+              img.removeAttribute('data-src');
+            }
+            observer.unobserve(img);
+          });
+        },
+        { rootMargin: '200px 0px' },
+      )
+    : null;
+
+  const lazyLoadImage = (img, src) => {
+    if (!galleryObserver) {
+      img.src = src;
+      return;
+    }
+    img.dataset.src = src;
+    galleryObserver.observe(img);
+  };
 
   const openLightbox = (index) => {
     if (!(dialog instanceof HTMLDialogElement) || !(lightboxImg instanceof HTMLImageElement)) return;
@@ -289,10 +365,11 @@ const setupGallery = () => {
       button.addEventListener('click', () => openLightbox(i));
 
       const img = document.createElement('img');
-      img.src = toGallerySrc(GALLERY_FILES[i]);
       img.alt = `Black Moose live photo ${i + 1}`;
       img.loading = 'lazy';
       img.decoding = 'async';
+      img.setAttribute('fetchpriority', 'low');
+      lazyLoadImage(img, toGallerySrc(GALLERY_FILES[i]));
 
       button.appendChild(img);
       grid.appendChild(button);
@@ -541,6 +618,175 @@ const setupEventsFromSheet = () => {
     });
 };
 
+const setupEventImageRotator = () => {
+  const wrapper = document.getElementById('eventsRotator');
+  const img = document.getElementById('eventsRotatorImg');
+  const empty = document.getElementById('eventsRotatorEmpty');
+  if (!(wrapper instanceof HTMLElement) || !(img instanceof HTMLImageElement) || !(empty instanceof HTMLElement)) return;
+
+  const { sheetId } = SHEET_CONFIG;
+  if (!sheetId) {
+    empty.textContent = 'Add your Google Sheet ID in script.js to show images here.';
+    return;
+  }
+
+  const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(
+    IMAGE_SHEET_CONFIG.sheetName,
+  )}`;
+
+  fetch(sheetUrl, { cache: 'no-store' })
+    .then((response) => {
+      if (!response.ok) throw new Error('Failed to load images');
+      return response.text();
+    })
+    .then((text) => {
+      const rows = parseCsv(text);
+      if (!rows.length) {
+        empty.textContent = 'No upcoming event images yet.';
+        return;
+      }
+
+      const headers = rows[0].map((header) => header.trim());
+      const linkIndex = findHeaderIndex(headers, IMAGE_HEADER_KEYS.link);
+      const dateIndex = findHeaderIndex(headers, IMAGE_HEADER_KEYS.date);
+      const hasHeaders = linkIndex !== -1 || dateIndex !== -1;
+      const dataRows = hasHeaders ? rows.slice(1) : rows;
+
+      const todayIso = toLocalISODate(new Date());
+      const items = dataRows
+        .map((row) => {
+          const rawLink = hasHeaders
+            ? (row[linkIndex !== -1 ? linkIndex : 0] || '').trim()
+            : (row[0] || '').trim();
+          const link = normalizeImageLink(rawLink);
+          const dateValue = hasHeaders
+            ? (row[dateIndex !== -1 ? dateIndex : 1] || '').trim()
+            : (row[1] || '').trim();
+          const isoDate = toIsoDate(dateValue);
+          if (!link) return null;
+          return { link, isoDate };
+        })
+        .filter(Boolean)
+        .filter((item) => item.isoDate && item.isoDate >= todayIso);
+
+      if (!items.length) {
+        empty.textContent = 'No upcoming event images yet.';
+        return;
+      }
+
+      const nearestDate = getEarliestIsoDate(items.map((item) => item.isoDate));
+      const nearestItems = items.filter((item) => item.isoDate === nearestDate);
+      if (!nearestItems.length) {
+        empty.textContent = 'No upcoming event images yet.';
+        return;
+      }
+
+      let currentIndex = 0;
+      let timerId = null;
+      let inView = true;
+
+      const showImage = (index) => {
+        const item = nearestItems[index];
+        if (!item) return;
+        img.classList.remove('is-visible');
+        const preloader = new Image();
+        preloader.onload = () => {
+          img.src = item.link;
+          img.alt = 'Upcoming event';
+          empty.style.display = 'none';
+          requestAnimationFrame(() => img.classList.add('is-visible'));
+        };
+        preloader.onerror = () => {
+          empty.textContent = 'Image link is not accessible.';
+          empty.style.display = '';
+        };
+        preloader.src = item.link;
+      };
+
+      const nextImage = () => {
+        currentIndex = (currentIndex + 1) % nearestItems.length;
+        showImage(currentIndex);
+      };
+
+      const start = () => {
+        if (timerId || nearestItems.length < 2 || !inView) return;
+        timerId = window.setInterval(nextImage, IMAGE_SHEET_CONFIG.intervalMs);
+      };
+
+      const stop = () => {
+        if (!timerId) return;
+        window.clearInterval(timerId);
+        timerId = null;
+      };
+
+      showImage(currentIndex);
+
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            const entry = entries[0];
+            inView = entry ? entry.isIntersecting : true;
+            if (inView) start();
+            else stop();
+          },
+          { threshold: 0.2 },
+        );
+        observer.observe(wrapper);
+      }
+
+      start();
+    })
+    .catch(() => {
+      empty.textContent = 'Unable to load event images right now.';
+    });
+};
+
+const setupPerformanceOptimizations = () => {
+  const body = document.body;
+  if (!body) return;
+
+  let heroInView = true;
+
+  const updatePausedState = () => {
+    const shouldPause = document.hidden || !heroInView;
+    body.classList.toggle('effects-paused', shouldPause);
+  };
+
+  const enableEffects = () => {
+    if (body.classList.contains('effects-ready')) return;
+    body.classList.add('effects-ready');
+    updatePausedState();
+  };
+
+  const onFirstInput = () => {
+    enableEffects();
+    window.removeEventListener('pointerdown', onFirstInput);
+    window.removeEventListener('touchstart', onFirstInput);
+    window.removeEventListener('scroll', onFirstInput);
+    window.removeEventListener('keydown', onFirstInput);
+  };
+
+  window.addEventListener('pointerdown', onFirstInput, { passive: true });
+  window.addEventListener('touchstart', onFirstInput, { passive: true });
+  window.addEventListener('scroll', onFirstInput, { passive: true });
+  window.addEventListener('keydown', onFirstInput);
+
+  document.addEventListener('visibilitychange', updatePausedState);
+
+  const header = document.querySelector('.header');
+  if ('IntersectionObserver' in window && header instanceof HTMLElement) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        heroInView = entry ? entry.isIntersecting : true;
+        updatePausedState();
+      },
+      { threshold: 0.1 },
+    );
+    observer.observe(header);
+  }
+};
+
 const setupMobileEmbedReveal = () => {
   const sections = [
     { id: 'soundcloud', cardSelector: '.soundcloud-card' },
@@ -762,6 +1008,8 @@ const setupBookingDialog = () => {
 
 setupGallery();
 setupEventsFromSheet();
+setupEventImageRotator();
+setupPerformanceOptimizations();
 setupMobileEmbedReveal();
 setupMobileViewportVideoAutoplay();
 setupBookingDialog();
