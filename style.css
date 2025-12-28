@@ -1429,8 +1429,16 @@ p {
   padding: 0 1.2em 1.6em 1.2em;
   display: flex;
   justify-content: center;
+  gap: 0.8em;
+  flex-wrap: wrap;
 }
 .events-more {
+  display: none;
+  height: 44px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+.events-all {
   display: none;
   height: 44px;
   padding: 0 16px;
@@ -2054,6 +2062,89 @@ p {
 .lightbox-nav:hover {
   border-color: rgba(194, 204, 255, 0.3);
   background: rgba(18, 21, 33, 0.75);
+}
+
+.events-dialog {
+  position: fixed;
+  inset: 0;
+  border: none;
+  padding: 0;
+  background: rgba(8, 11, 20, 0.92);
+  width: min(960px, 92vw);
+  max-width: none;
+  max-height: calc(100vh - 32px);
+  margin: auto;
+  border-radius: 1.6em;
+  box-shadow: 0 50px 160px rgba(0, 0, 0, 0.65);
+  overflow: hidden;
+}
+.events-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.events-dialog-close {
+  position: absolute;
+  right: 18px;
+  top: 16px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(194, 204, 255, 0.2);
+  background: rgba(18, 21, 33, 0.85);
+  color: #d8ecf8;
+  font-size: 22px;
+  cursor: pointer;
+}
+.events-dialog-close:focus-visible {
+  outline: 2px solid rgba(152, 192, 239, 0.8);
+  outline-offset: 3px;
+}
+.events-dialog-head {
+  padding: 2em 2em 1em 2em;
+  text-align: center;
+}
+.events-dialog-kicker {
+  margin: 0;
+  font-size: 0.8em;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(216, 236, 248, 0.7);
+}
+.events-dialog-title {
+  margin: 0.4em 0 0 0;
+  font-size: 2em;
+  color: #d8ecf8;
+}
+.events-dialog-list {
+  padding: 0 2em 2em 2em;
+  display: grid;
+  gap: 1em;
+  max-height: min(70vh, 720px);
+  overflow-y: auto;
+}
+.events-dialog-empty {
+  border-radius: 1.2em;
+  border: 1px dashed rgba(194, 204, 255, 0.25);
+  background: rgba(18, 21, 33, 0.4);
+  color: #d8ecf8be;
+  text-align: center;
+  padding: 1.4em;
+}
+@media (max-width: 700px) {
+  .events-dialog {
+    width: min(96vw, 720px);
+  }
+  .events-dialog-head {
+    padding: 1.6em 1.2em 0.8em 1.2em;
+  }
+  .events-dialog-title {
+    font-size: 1.6em;
+  }
+  .events-dialog-list {
+    padding: 0 1.2em 1.4em 1.2em;
+    max-height: 70vh;
+  }
 }
 
 .booking-dialog {

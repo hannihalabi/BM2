@@ -206,6 +206,7 @@
       </div>
       <div class="events-actions">
         <button class="cta-pill events-more" id="eventsMore" type="button">Show more<span class="cta-pill-glow" aria-hidden="true"></span></button>
+        <button class="cta-pill events-all" id="eventsAll" type="button">Show all events<span class="cta-pill-glow" aria-hidden="true"></span></button>
       </div>
     </section>
 
@@ -470,6 +471,17 @@
       <button class="lightbox-nav lightbox-prev" type="button" data-lightbox-prev aria-label="Previous">‹</button>
       <button class="lightbox-nav lightbox-next" type="button" data-lightbox-next aria-label="Next">›</button>
       <img id="lightboxImg" alt="" />
+    </dialog>
+
+    <dialog class="events-dialog" id="eventsDialog" aria-label="All events">
+      <button class="events-dialog-close" type="button" data-events-close aria-label="Close">×</button>
+      <div class="events-dialog-head">
+        <p class="events-dialog-kicker">Events</p>
+        <h3 class="events-dialog-title">All events</h3>
+      </div>
+      <div class="events-dialog-list" id="eventsDialogList">
+        <div class="events-dialog-empty" id="eventsDialogEmpty">No events to show.</div>
+      </div>
     </dialog>
 
     <dialog class="booking-dialog" id="bookingDialog" aria-label="Booking contact">

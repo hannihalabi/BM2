@@ -316,6 +316,11 @@ const setupEventsFromSheet = () => {
   const list = document.getElementById('eventsList');
   const empty = document.getElementById('eventsEmpty');
   const showMoreBtn = document.getElementById('eventsMore');
+  const showAllBtn = document.getElementById('eventsAll');
+  const dialog = document.getElementById('eventsDialog');
+  const dialogList = document.getElementById('eventsDialogList');
+  const dialogEmpty = document.getElementById('eventsDialogEmpty');
+  const dialogClose = dialog?.querySelector('[data-events-close]');
   if (!(list instanceof HTMLElement) || !(empty instanceof HTMLElement)) return;
 
   const { sheetId, gid, maxRows } = SHEET_CONFIG;
@@ -323,7 +328,15 @@ const setupEventsFromSheet = () => {
   if (!sheetId) {
     empty.textContent = 'Add your Google Sheet ID in script.js to show dates here.';
     if (showMoreBtn instanceof HTMLElement) showMoreBtn.style.display = 'none';
+    if (showAllBtn instanceof HTMLElement) showAllBtn.style.display = 'none';
     return;
+  }
+
+  if (dialog instanceof HTMLDialogElement) {
+    dialogClose?.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) dialog.close();
+    });
   }
 
   const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${encodeURIComponent(
@@ -341,6 +354,8 @@ const setupEventsFromSheet = () => {
       const rows = parseCsv(text);
       if (!rows.length) {
         empty.textContent = 'No dates yet.';
+        if (showMoreBtn instanceof HTMLElement) showMoreBtn.style.display = 'none';
+        if (showAllBtn instanceof HTMLElement) showAllBtn.style.display = 'none';
         return;
       }
 
@@ -350,6 +365,7 @@ const setupEventsFromSheet = () => {
       if (!dataRows.length) {
         empty.textContent = 'No dates yet.';
         if (showMoreBtn instanceof HTMLElement) showMoreBtn.style.display = 'none';
+        if (showAllBtn instanceof HTMLElement) showAllBtn.style.display = 'none';
         return;
       }
 
@@ -370,12 +386,10 @@ const setupEventsFromSheet = () => {
         return value ? value.trim() : '';
       };
 
-      const events = [];
-      const limit = Math.min(dataRows.length, maxRows || dataRows.length);
+      const limit = maxRows && maxRows > 0 ? Math.min(dataRows.length, maxRows) : dataRows.length;
       const todayIso = toLocalISODate(new Date());
 
-      for (let i = 0; i < limit; i += 1) {
-        const row = dataRows[i];
+      const buildEvent = (row) => {
         const event = {
           date: getValue(row, indexes.date),
           time: getValue(row, indexes.time),
@@ -387,19 +401,24 @@ const setupEventsFromSheet = () => {
           note: getValue(row, indexes.note),
         };
 
-        if (!Object.values(event).some((value) => value)) continue;
+        if (!Object.values(event).some((value) => value)) return null;
         const eventIsoDate = extractIsoDate(event.date);
-        if (eventIsoDate && isPastIsoDate(eventIsoDate, todayIso)) continue;
-        events.push({ ...event, isoDate: eventIsoDate });
-      }
+        return { ...event, isoDate: eventIsoDate };
+      };
 
-      if (!events.length) {
-        empty.textContent = 'No events found. Check your column headers.';
+      const allEvents = dataRows.map(buildEvent).filter(Boolean);
+      const upcomingEvents = allEvents
+        .slice(0, limit)
+        .filter((event) => !(event.isoDate && isPastIsoDate(event.isoDate, todayIso)));
+
+      if (!upcomingEvents.length) {
+        empty.textContent = allEvents.length ? 'No upcoming events yet.' : 'No events found. Check your column headers.';
         if (showMoreBtn instanceof HTMLElement) showMoreBtn.style.display = 'none';
+        if (showAllBtn instanceof HTMLElement) showAllBtn.style.display = 'none';
         return;
       }
 
-      const futureIsoDates = events
+      const futureIsoDates = upcomingEvents
         .map((event) => event.isoDate)
         .filter((isoDate) => isoDate && isoDate > todayIso);
       const nextIsoDate = getEarliestIsoDate(futureIsoDates);
@@ -467,7 +486,8 @@ const setupEventsFromSheet = () => {
         return card;
       };
 
-      const cards = events.map(makeCard);
+      const cards = upcomingEvents.map(makeCard);
+      const allCards = allEvents.map(makeCard);
       const fragment = document.createDocumentFragment();
       const initialCount = Math.min(EVENTS_INITIAL_COUNT, cards.length);
       cards.slice(0, initialCount).forEach((card) => fragment.appendChild(card));
@@ -475,6 +495,18 @@ const setupEventsFromSheet = () => {
       list.innerHTML = '';
       empty.remove();
       list.appendChild(fragment);
+
+      if (dialogList instanceof HTMLElement && dialogEmpty instanceof HTMLElement) {
+        if (!allCards.length) {
+          dialogEmpty.textContent = 'No events to show.';
+        } else {
+          dialogList.innerHTML = '';
+          const dialogFragment = document.createDocumentFragment();
+          allCards.forEach((card) => dialogFragment.appendChild(card));
+          dialogEmpty.remove();
+          dialogList.appendChild(dialogFragment);
+        }
+      }
 
       if (showMoreBtn instanceof HTMLElement) {
         if (cards.length > initialCount) {
@@ -486,6 +518,7 @@ const setupEventsFromSheet = () => {
               cards.slice(initialCount).forEach((card) => rest.appendChild(card));
               list.appendChild(rest);
               showMoreBtn.style.display = 'none';
+              if (showAllBtn instanceof HTMLElement) showAllBtn.style.display = 'inline-flex';
             },
             { once: true },
           );
@@ -493,10 +526,18 @@ const setupEventsFromSheet = () => {
           showMoreBtn.style.display = 'none';
         }
       }
+
+      if (showAllBtn instanceof HTMLButtonElement && dialog instanceof HTMLDialogElement) {
+        showAllBtn.addEventListener('click', () => {
+          dialog.showModal();
+          dialogClose?.focus?.();
+        });
+      }
     })
     .catch(() => {
       empty.textContent = 'Unable to load dates right now.';
       if (showMoreBtn instanceof HTMLElement) showMoreBtn.style.display = 'none';
+      if (showAllBtn instanceof HTMLElement) showAllBtn.style.display = 'none';
     });
 };
 
