@@ -202,6 +202,13 @@ const isPastIsoDate = (isoDate, todayIso) => {
   return isoDate < todayIso;
 };
 
+const getEarliestIsoDate = (dates) =>
+  dates.reduce((earliest, date) => {
+    if (!date) return earliest;
+    if (!earliest) return date;
+    return date < earliest ? date : earliest;
+  }, '');
+
 const findHeaderIndex = (headers, candidates) => {
   const normalized = headers.map((header) => header.trim().toLowerCase());
   for (const candidate of candidates) {
@@ -383,7 +390,7 @@ const setupEventsFromSheet = () => {
         if (!Object.values(event).some((value) => value)) continue;
         const eventIsoDate = extractIsoDate(event.date);
         if (eventIsoDate && isPastIsoDate(eventIsoDate, todayIso)) continue;
-        events.push(event);
+        events.push({ ...event, isoDate: eventIsoDate });
       }
 
       if (!events.length) {
@@ -391,6 +398,11 @@ const setupEventsFromSheet = () => {
         if (showMoreBtn instanceof HTMLElement) showMoreBtn.style.display = 'none';
         return;
       }
+
+      const futureIsoDates = events
+        .map((event) => event.isoDate)
+        .filter((isoDate) => isoDate && isoDate > todayIso);
+      const nextIsoDate = getEarliestIsoDate(futureIsoDates);
 
       const makeCard = (event) => {
         const card = document.createElement('article');
@@ -400,10 +412,13 @@ const setupEventsFromSheet = () => {
         const dateEl = document.createElement('p');
         dateEl.className = 'event-date';
         dateEl.textContent = dateText;
-        const isoDate = extractIsoDate(event.date);
-        if (isoDate && isoDate === toLocalISODate(new Date())) {
+        const isoDate = event.isoDate;
+        if (isoDate && isoDate === todayIso) {
           card.classList.add('event-card--today');
           dateEl.classList.add('event-date--today');
+        } else if (isoDate && isoDate === nextIsoDate) {
+          card.classList.add('event-card--next');
+          dateEl.classList.add('event-date--next');
         }
         const details = document.createElement('div');
         details.className = 'event-details';
