@@ -98,6 +98,13 @@ const GALLERY_FILES = [...GALLERY_FILES_RAW].sort((a, b) => {
   return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
 });
 
+const GALLERY_DRIVE_CONFIG = {
+  folderId: '1tErBvUcX62EqlCmCNsQkqiUbpln0BuaB',
+  apiKey: '', // Add a browser-restricted Google Drive API key to enable auto updates.
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbxmFSesISjrHPdJIAxQHhimAJEFztVpxpHFqXWkxRdaDPW1_GIs9t6m7SZeYROYHQ7N/exec', // Add an Apps Script web app URL to avoid API keys.
+  maxItems: 120,
+};
+
 const SHEET_CONFIG = {
   sheetId: '1z0sGYdKz6QzpyX904lH4hu7WMBse1_HF8je_qfVetHE',
   gid: '0',
@@ -132,7 +139,102 @@ const trackEvent = (name, params = {}) => {
   window.gtag('event', name, params);
 };
 
-const toGallerySrc = (filename) => encodeURI(`Bm-pics/${filename}`);
+const toGallerySrc = (source) => {
+  if (!source) return '';
+  if (/^https?:/i.test(source)) return source;
+  return encodeURI(`Bm-pics/${source}`);
+};
+
+const buildDriveImageSrc = (fileId) => `https://lh3.googleusercontent.com/d/${fileId}=w1600`;
+
+const fetchGalleryFromScript = async () => {
+  const { scriptUrl, maxItems } = GALLERY_DRIVE_CONFIG;
+  if (!scriptUrl) return [];
+
+  const response = await fetch(scriptUrl, { cache: 'no-store' });
+  if (!response.ok) throw new Error(`Apps Script error: ${response.status}`);
+
+  const data = await response.json();
+  const items = Array.isArray(data.items) ? data.items : [];
+  const urls = Array.isArray(data.urls) ? data.urls : [];
+  const sources = urls.length
+    ? urls
+    : items.map((item) => item?.url || (item?.id ? buildDriveImageSrc(item.id) : '')).filter(Boolean);
+
+  return sources.slice(0, maxItems);
+};
+
+const fetchDriveGalleryFiles = async () => {
+  const { folderId, apiKey, maxItems } = GALLERY_DRIVE_CONFIG;
+  if (!folderId || !apiKey) return [];
+
+  const files = [];
+  let pageToken = '';
+  const pageSize = Math.min(1000, Math.max(1, maxItems));
+  const baseQuery = `'${folderId}' in parents and trashed=false and mimeType contains 'image/'`;
+
+  while (files.length < maxItems) {
+    const params = new URLSearchParams({
+      q: baseQuery,
+      fields: 'nextPageToken, files(id, name, mimeType, modifiedTime)',
+      orderBy: 'modifiedTime desc',
+      pageSize: String(pageSize),
+      key: apiKey,
+    });
+
+    if (pageToken) params.set('pageToken', pageToken);
+
+    const response = await fetch(`https://www.googleapis.com/drive/v3/files?${params.toString()}`, {
+      cache: 'no-store',
+    });
+
+    if (!response.ok) throw new Error(`Drive API error: ${response.status}`);
+    const data = await response.json();
+    const batch = Array.isArray(data.files) ? data.files : [];
+
+    batch.forEach((file) => {
+      if (!file?.id) return;
+      files.push({ id: file.id, modifiedTime: file.modifiedTime || '' });
+    });
+
+    pageToken = data.nextPageToken;
+    if (!pageToken) break;
+  }
+
+  return files.slice(0, maxItems).map((file) => buildDriveImageSrc(file.id));
+};
+
+const loadGallerySources = async () => {
+  let driveFiles = [];
+
+  if (GALLERY_DRIVE_CONFIG.scriptUrl) {
+    try {
+      driveFiles = await fetchGalleryFromScript();
+    } catch (error) {
+      console.warn('Gallery: failed to load Apps Script images.', error);
+    }
+  }
+
+  if (!driveFiles.length) {
+    try {
+      driveFiles = await fetchDriveGalleryFiles();
+    } catch (error) {
+      console.warn('Gallery: failed to load Drive API images.', error);
+    }
+  }
+
+  if (!driveFiles.length) return [...GALLERY_FILES];
+
+  const combined = [...driveFiles, ...GALLERY_FILES];
+  const seen = new Set();
+
+  return combined.filter((source) => {
+    const src = toGallerySrc(source);
+    if (!src || seen.has(src)) return false;
+    seen.add(src);
+    return true;
+  });
+};
 
 const parseCsv = (text) => {
   const rows = [];
@@ -266,7 +368,7 @@ const findHeaderIndex = (headers, candidates) => {
   return -1;
 };
 
-const setupGallery = () => {
+const setupGallery = (galleryFiles = GALLERY_FILES) => {
   const grid = document.getElementById('galleryGrid');
   if (!grid) return;
 
@@ -310,8 +412,9 @@ const setupGallery = () => {
 
   const openLightbox = (index) => {
     if (!(dialog instanceof HTMLDialogElement) || !(lightboxImg instanceof HTMLImageElement)) return;
-    currentIndex = ((index % GALLERY_FILES.length) + GALLERY_FILES.length) % GALLERY_FILES.length;
-    lightboxImg.src = toGallerySrc(GALLERY_FILES[currentIndex]);
+    if (!galleryFiles.length) return;
+    currentIndex = ((index % galleryFiles.length) + galleryFiles.length) % galleryFiles.length;
+    lightboxImg.src = toGallerySrc(galleryFiles[currentIndex]);
     lightboxImg.alt = `Gallery image ${currentIndex + 1}`;
     dialog.showModal();
     closeBtn?.focus?.();
@@ -356,7 +459,7 @@ const setupGallery = () => {
   };
 
   const renderNextBatch = () => {
-    const nextCount = Math.min(GALLERY_FILES.length, renderedCount + getBatchSize());
+    const nextCount = Math.min(galleryFiles.length, renderedCount + getBatchSize());
     for (let i = renderedCount; i < nextCount; i++) {
       const button = document.createElement('button');
       button.type = 'button';
@@ -369,7 +472,7 @@ const setupGallery = () => {
       img.loading = 'lazy';
       img.decoding = 'async';
       img.setAttribute('fetchpriority', 'low');
-      lazyLoadImage(img, toGallerySrc(GALLERY_FILES[i]));
+      lazyLoadImage(img, toGallerySrc(galleryFiles[i]));
 
       button.appendChild(img);
       grid.appendChild(button);
@@ -378,7 +481,7 @@ const setupGallery = () => {
     renderedCount = nextCount;
 
     if (showMoreBtn instanceof HTMLElement) {
-      showMoreBtn.style.display = renderedCount >= GALLERY_FILES.length ? 'none' : '';
+      showMoreBtn.style.display = renderedCount >= galleryFiles.length ? 'none' : '';
     }
   };
 
@@ -1006,7 +1109,9 @@ const setupBookingDialog = () => {
   });
 };
 
-setupGallery();
+loadGallerySources()
+  .then((sources) => setupGallery(sources))
+  .catch(() => setupGallery());
 setupEventsFromSheet();
 setupEventImageRotator();
 setupPerformanceOptimizations();
