@@ -108,10 +108,11 @@ const GALLERY_DRIVE_CONFIG = {
 const SHEET_CONFIG = {
   sheetId: '1z0sGYdKz6QzpyX904lH4hu7WMBse1_HF8je_qfVetHE',
   gid: '0',
-  maxRows: 12,
+  maxRows: 0,
 };
 
-const EVENTS_INITIAL_COUNT = 3;
+const EVENTS_INITIAL_COUNT = 6;
+const EVENTS_SHOW_MORE_COUNT = 15;
 
 const EVENT_HEADER_KEYS = {
   date: ['date', 'datum'],
@@ -588,8 +589,8 @@ const setupEventsFromSheet = () => {
 
       const allEvents = dataRows.map(buildEvent).filter(Boolean);
       const upcomingEvents = allEvents
-        .slice(0, limit)
-        .filter((event) => !(event.isoDate && isPastIsoDate(event.isoDate, todayIso)));
+        .filter((event) => !(event.isoDate && isPastIsoDate(event.isoDate, todayIso)))
+        .slice(0, limit);
 
       if (!upcomingEvents.length) {
         empty.textContent = allEvents.length ? 'No upcoming events yet.' : 'No events found. Check your column headers.';
@@ -695,10 +696,13 @@ const setupEventsFromSheet = () => {
             'click',
             () => {
               const rest = document.createDocumentFragment();
-              cards.slice(initialCount).forEach((card) => rest.appendChild(card));
+              const moreCount = Math.min(EVENTS_SHOW_MORE_COUNT, cards.length);
+              cards.slice(initialCount, moreCount).forEach((card) => rest.appendChild(card));
               list.appendChild(rest);
               showMoreBtn.style.display = 'none';
-              if (showAllBtn instanceof HTMLElement) showAllBtn.style.display = 'inline-flex';
+              if (showAllBtn instanceof HTMLElement) {
+                showAllBtn.style.display = cards.length > EVENTS_SHOW_MORE_COUNT ? 'inline-flex' : 'none';
+              }
             },
             { once: true },
           );
