@@ -960,6 +960,78 @@ p {
   pointer-events: none;
 }
 
+.hero-social {
+  position: relative;
+  z-index: 60;
+  width: min(1100px, 92vw);
+  margin: -0.8em auto 0 auto;
+  padding-bottom: 0.8em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.9em;
+}
+.hero-social-link {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  border: 1px solid rgba(194, 204, 255, 0.22);
+  background: rgba(18, 21, 33, 0.68);
+  box-shadow:
+    0 16px 34px rgba(0, 0, 0, 0.33),
+    0 0 0 1px rgba(152, 192, 239, 0.1) inset;
+  color: #d8ecf8;
+  text-decoration: none;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+.hero-social-link::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: radial-gradient(circle at 50% 0%, rgba(152, 192, 239, 0.28), transparent 58%);
+  pointer-events: none;
+}
+.hero-social-link:hover {
+  transform: translateY(-2px);
+  border-color: rgba(194, 204, 255, 0.42);
+  color: #f1f8ff;
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.38),
+    0 0 0 1px rgba(152, 192, 239, 0.22) inset;
+}
+.hero-social-link:active {
+  transform: translateY(0);
+}
+.hero-social-link:focus-visible {
+  outline: 2px solid rgba(152, 192, 239, 0.82);
+  outline-offset: 3px;
+}
+.hero-social-icon {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.hero-social-icon-fill {
+  fill: currentColor;
+  stroke: none;
+}
+
 .logo-loop {
   position: relative;
   z-index: 60;
@@ -1340,6 +1412,18 @@ p {
   .book-cta {
     display: inline-flex;
     margin-top: 0.9em;
+  }
+  .hero-social {
+    margin-top: -0.3em;
+    gap: 0.7em;
+  }
+  .hero-social-link {
+    width: 44px;
+    height: 44px;
+  }
+  .hero-social-icon {
+    width: 20px;
+    height: 20px;
   }
   .gallery-section {
     margin-top: 3.5em;
